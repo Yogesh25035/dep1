@@ -1,0 +1,26 @@
+# Python / Django
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+db.sqlite3
+.env
+
+# Machine Learning Models / Assets
+ml_models/
+*.pkl
+
+
+# Node / React Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.DS_Store
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
