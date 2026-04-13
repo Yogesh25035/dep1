@@ -7,6 +7,7 @@ class PredictionLog(models.Model):
     label = models.CharField(max_length=50) # 'Attack' or 'Normal'
     confidence = models.FloatField()
     attack_type = models.CharField(max_length=100)
+    payload = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['-timestamp']
