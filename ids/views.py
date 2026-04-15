@@ -16,6 +16,15 @@ SCALER_PATH = os.path.join(MODEL_DIR, 'scaler.pkl')
 rf_model = None
 scaler = None
 
+
+def get_missing_model_artifacts():
+    missing = []
+    if not os.path.exists(MODEL_PATH):
+        missing.append(MODEL_PATH)
+    if not os.path.exists(SCALER_PATH):
+        missing.append(SCALER_PATH)
+    return missing
+
 # Exact features the model was trained on (Modbus/TCP engineered features)
 FINAL_FEATURES = [
     'tcp.srcport', 'tcp.dstport', 'tcp.len', 'tcp.seq', 'tcp.ack',
@@ -36,13 +45,29 @@ CLASS_MAP = {0: 'Normal', 1: 'Attack'}
 def ensure_model_loaded():
     global rf_model, scaler
     if rf_model is None or scaler is None:
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
-        if not os.path.exists(SCALER_PATH):
-            raise FileNotFoundError(f"Scaler file not found at {SCALER_PATH}")
+        missing = get_missing_model_artifacts()
+        if missing:
+            raise FileNotFoundError(
+                "Missing model artifact(s): " + ", ".join(missing)
+            )
         rf_model = joblib.load(MODEL_PATH, mmap_mode='r')
         scaler = joblib.load(SCALER_PATH)
     return rf_model, scaler
+
+
+def health_view(request):
+    missing = get_missing_model_artifacts()
+    if missing:
+        return JsonResponse({
+            'status': 'degraded',
+            'model_ready': False,
+            'missing_artifacts': missing,
+        }, status=503)
+
+    return JsonResponse({
+        'status': 'ok',
+        'model_ready': True,
+    })
 
 
 def get_client_ip(request):
