@@ -7,8 +7,9 @@ db.sqlite3
 .env
 
 # Machine Learning Models / Assets
-ml_models/
-*.pkl
+ml_models/*
+!ml_models/rf_model_v3.pkl
+!ml_models/scaler.pkl
 
 
 # Node / React Frontend
