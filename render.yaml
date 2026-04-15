@@ -22,9 +22,7 @@ services:
         value: ".onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://*.onrender.com"
-      - key: CORS_ALLOWED_ORIGINS
-        value: "https://*.onrender.com"
       - key: MODEL_STARTUP_CHECK
-        value: "True"
+        value: "False"
       - key: RF_API_URL
         value: "http://localhost:5000"

@@ -62,7 +62,7 @@ def health_view(request):
             'status': 'degraded',
             'model_ready': False,
             'missing_artifacts': missing,
-        }, status=503)
+        })
 
     return JsonResponse({
         'status': 'ok',
