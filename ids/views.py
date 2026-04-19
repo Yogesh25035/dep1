@@ -175,19 +175,30 @@ def upload_view(request):
         df_raw   = pd.read_csv(file)
         df_raw   = df_raw.fillna(0)
 
+        # Normalise header names so common variations are accepted.
+        df_raw.columns = [str(c).strip().lower() for c in df_raw.columns]
+
         # ── Ground-truth column detection ────────────────────────────────
         # Support CSVs that have a 'label' or 'actual' column for evaluation
         actual_col = None
-        for candidate in ('label', 'actual', 'Label', 'Actual', 'class', 'Class'):
+        for candidate in ('label', 'actual', 'class'):
             if candidate in df_raw.columns:
                 actual_col = candidate
                 break
 
         # ── Feature alignment ─────────────────────────────────────────────
         # Only keep model-expected feature columns; fill missing ones with 0.
-        # If the CSV uses different column names (e.g. KDDTrain+ format),
-        # the missing features will be 0 — the model will still run but results
-        # reflect the mismatch. A warning is added to the response.
+        present_features = [c for c in FINAL_FEATURES if c in df_raw.columns]
+        if len(present_features) == 0:
+            return JsonResponse({'error': 'Uploaded CSV does not contain any recognized Modbus/TCP model feature columns.'}, status=400)
+        if len(present_features) < 5:
+            return JsonResponse({
+                'error': (
+                    f'Uploaded CSV contains only {len(present_features)} of {len(FINAL_FEATURES)} expected model features. '
+                    'Provide a file with more of the required feature columns.'
+                )
+            }, status=400)
+
         missing_features = [c for c in FINAL_FEATURES if c not in df_raw.columns]
         for col in missing_features:
             df_raw[col] = 0
