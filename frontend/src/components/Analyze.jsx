@@ -52,25 +52,6 @@ const FIELD_META = {
   rolling_pkt_rate_log:    { label: 'Pkt Rate Log',          placeholder: '0.0' },
 };
 
-/* ── Compute confusion matrix ── */
-function computeMetrics(results) {
-  if (!results?.length || !results[0].actual) return null;
-  let tp = 0, fp = 0, tn = 0, fn = 0;
-  results.forEach(r => {
-    const pred   = r.prediction.toLowerCase();
-    const actual = r.actual?.toLowerCase();
-    if (actual === 'attack' && pred === 'attack') tp++;
-    else if (actual === 'normal' && pred === 'attack') fp++;
-    else if (actual === 'normal' && pred === 'normal') tn++;
-    else if (actual === 'attack' && pred === 'normal') fn++;
-  });
-  const total    = tp + tn + fp + fn;
-  const accuracy = total > 0 ? ((tp + tn) / total * 100).toFixed(1) : '0.0';
-  const precision = (tp + fp) > 0 ? (tp / (tp + fp) * 100).toFixed(1) : '0.0';
-  const recall    = (tp + fn) > 0 ? (tp / (tp + fn) * 100).toFixed(1) : '0.0';
-  return { tp, fp, tn, fn, accuracy, precision, recall, total };
-}
-
 /* ── Inline confidence bar ── */
 function ConfBar({ value, pred }) {
   const isAttack = pred?.toLowerCase() === 'attack';
@@ -144,7 +125,6 @@ export default function Analyze() {
     setManualLoading(false);
   };
 
-  const metrics = computeMetrics(results);
   const attackCount  = results.filter(r => r.prediction?.toLowerCase() === 'attack').length;
   const normalCount  = results.length - attackCount;
 
@@ -264,50 +244,7 @@ export default function Analyze() {
                     <div className="stat-value green">{normalCount}</div>
                     <div className="stat-label">Normal Traffic</div>
                   </div>
-                  {metrics && (
-                    <div className="stat-card orange">
-                      <div className="stat-value orange">{metrics.accuracy}%</div>
-                      <div className="stat-label">True Accuracy</div>
-                    </div>
-                  )}
                 </div>
-
-                {/* Confusion matrix (only if ground truth present) */}
-                {metrics && (
-                  <div className="card">
-                    <div className="card-header">
-                      <div className="card-title">Ground Truth Evaluation</div>
-                    </div>
-                    <div className="card-body">
-                      <div className="metrics-strip">
-                        <div className="metric-box">
-                          <div className="val" style={{ color: 'var(--success)' }}>{metrics.tp}</div>
-                          <div className="lbl">True Positives</div>
-                        </div>
-                        <div className="metric-box">
-                          <div className="val" style={{ color: 'var(--danger)' }}>{metrics.fp}</div>
-                          <div className="lbl">False Positives</div>
-                        </div>
-                        <div className="metric-box">
-                          <div className="val" style={{ color: 'var(--success)' }}>{metrics.tn}</div>
-                          <div className="lbl">True Negatives</div>
-                        </div>
-                        <div className="metric-box">
-                          <div className="val" style={{ color: 'var(--warning)' }}>{metrics.fn}</div>
-                          <div className="lbl">False Negatives</div>
-                        </div>
-                        <div className="metric-box">
-                          <div className="val" style={{ color: 'var(--accent)' }}>{metrics.precision}%</div>
-                          <div className="lbl">Precision</div>
-                        </div>
-                        <div className="metric-box">
-                          <div className="val" style={{ color: 'var(--accent)' }}>{metrics.recall}%</div>
-                          <div className="lbl">Recall</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Results table */}
                 <div className="card">
@@ -322,7 +259,6 @@ export default function Analyze() {
                       <thead>
                         <tr>
                           <th>Row</th>
-                          {metrics && <th>Actual</th>}
                           <th>Prediction</th>
                           <th style={{ minWidth: 160 }}>Confidence</th>
                         </tr>
@@ -333,13 +269,6 @@ export default function Analyze() {
                           return (
                             <tr key={i}>
                               <td className="mono" style={{ color: 'var(--text-muted)' }}>#{r.row}</td>
-                              {metrics && (
-                                <td>
-                                  <span className={`badge ${r.actual?.toLowerCase() === 'attack' ? 'attack' : 'normal'}`}>
-                                    <span className="badge-dot" />{r.actual}
-                                  </span>
-                                </td>
-                              )}
                               <td>
                                 <span className={`badge ${cls}`}>
                                   <span className="badge-dot" />{r.prediction}
